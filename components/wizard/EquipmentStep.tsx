@@ -53,7 +53,7 @@ interface AnalysisRecommendation {
 
 export function EquipmentStep() {
   const { state, dispatch } = useAnalysis()
-  const { formData } = state
+  const { formData, results } = state // Get results from context
   const [recommendations, setRecommendations] = useState<AnalysisRecommendation | null>(null)
   const [allEquipment, setAllEquipment] = useState<Equipment[]>([])
   const [loading, setLoading] = useState(false)
@@ -62,7 +62,6 @@ export function EquipmentStep() {
 
   // --- Data Fetching ---
 
-  // Fetch AI recommendations from the deployed Edge Function
   const fetchRecommendations = useCallback(async () => {
     if (!formData.failureType || !formData.urgencyLevel) return
 
@@ -70,7 +69,6 @@ export function EquipmentStep() {
     setError(null)
 
     try {
-      // *** REFINED CODE: Using the live Supabase Edge Function endpoint ***
       const apiUrl = 'https://cjuqhjnxwppuckvtnaxq.supabase.co/functions/v1/get-analysis-recommendation'
       
       const response = await fetch(apiUrl, {
@@ -93,11 +91,9 @@ export function EquipmentStep() {
       const data: AnalysisRecommendation = await response.json()
       setRecommendations(data)
       
-      // Auto-select recommended equipment by default
       const recommendedIds = data.recommended_equipment.map(eq => eq.id)
       setSelectedEquipment(recommendedIds)
       
-      // Update the global context with the full results from the AI
       dispatch({
         type: 'UPDATE_EQUIPMENT',
         payload: { selectedEquipment: data.recommended_equipment }
@@ -119,7 +115,6 @@ export function EquipmentStep() {
     }
   }, [formData.failureType, formData.urgencyLevel, dispatch])
 
-  // Fetch all equipment from the database table
   const fetchAllEquipment = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -150,7 +145,6 @@ export function EquipmentStep() {
     
     setSelectedEquipment(newSelectionIds)
     
-    // Update selected equipment in the global context
     const allAvailableEquipment = recommendations?.recommended_equipment.concat(allEquipment) || allEquipment;
     const uniqueEquipment = Array.from(new Map(allAvailableEquipment.map(item => [item.id, item])).values());
     const selectedEquipmentData = uniqueEquipment.filter(eq => newSelectionIds.includes(eq.id))
@@ -160,7 +154,6 @@ export function EquipmentStep() {
       payload: { selectedEquipment: selectedEquipmentData }
     })
     
-    // Recalculate totals based on the new selection
     const totalCost = selectedEquipmentData.reduce((sum, eq) => sum + eq.base_cost, 0)
     const totalDuration = selectedEquipmentData.reduce((sum, eq) => sum + eq.base_duration_hours, 0)
     
@@ -321,11 +314,13 @@ export function EquipmentStep() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center space-x-2">
                       <DollarSign className="w-4 h-4 text-green-600" />
-                      <span>Estimated Cost: <strong>${recommendations.total_cost.toLocaleString()}</strong></span>
+                      {/* --- FIX: Read from the global context (state.results) --- */}
+                      <span>Estimated Cost: <strong>${results.totalEstimatedCost?.toLocaleString()}</strong></span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-blue-600" />
-                      <span>Total Duration: <strong>{recommendations.total_duration} hours</strong></span>
+                      {/* --- FIX: Read from the global context (state.results) --- */}
+                      <span>Total Duration: <strong>{results.totalEstimatedDuration} hours</strong></span>
                     </div>
                   </div>
                 </div>

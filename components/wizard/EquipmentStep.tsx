@@ -162,9 +162,12 @@ export function EquipmentStep() {
     }
     const multiplier = urgencyMultipliers[formData.urgencyLevel] || 1.0
     
+    // --- FIX: Ensure the full results object is dispatched ---
+    // We need to include the existing aiRecommendations to prevent them from being erased from the global state.
     dispatch({
       type: 'UPDATE_RESULTS',
       payload: {
+        aiRecommendations: recommendations, // Preserve the original recommendations
         totalEstimatedCost: Math.round(totalCost * multiplier * 100) / 100,
         totalEstimatedDuration: totalDuration
       }
@@ -314,12 +317,10 @@ export function EquipmentStep() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center space-x-2">
                       <DollarSign className="w-4 h-4 text-green-600" />
-                      {/* --- FIX: Use optional chaining on `results` to prevent crash --- */}
                       <span>Estimated Cost: <strong>${results?.totalEstimatedCost?.toLocaleString() ?? '...'}</strong></span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-blue-600" />
-                      {/* --- FIX: Use optional chaining on `results` to prevent crash --- */}
                       <span>Total Duration: <strong>{results?.totalEstimatedDuration ?? '...'} hours</strong></span>
                     </div>
                   </div>

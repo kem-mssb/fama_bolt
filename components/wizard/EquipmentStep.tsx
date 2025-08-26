@@ -314,13 +314,13 @@ export function EquipmentStep() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center space-x-2">
                       <DollarSign className="w-4 h-4 text-green-600" />
-                      {/* --- FIX: Read from the global context (state.results) --- */}
-                      <span>Estimated Cost: <strong>${results.totalEstimatedCost?.toLocaleString()}</strong></span>
+                      {/* --- FIX: Added optional chaining to prevent crash if results is undefined --- */}
+                      <span>Estimated Cost: <strong>${results?.totalEstimatedCost?.toLocaleString()}</strong></span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-blue-600" />
-                      {/* --- FIX: Read from the global context (state.results) --- */}
-                      <span>Total Duration: <strong>{results.totalEstimatedDuration} hours</strong></span>
+                      {/* --- FIX: Added optional chaining to prevent crash if results is undefined --- */}
+                      <span>Total Duration: <strong>{results?.totalEstimatedDuration} hours</strong></span>
                     </div>
                   </div>
                 </div>

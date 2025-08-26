@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Bot, Clock, DollarSign, FileText, AlertTriangle, CheckCircle, ListChecks, Target } from 'lucide-react'
+import { Bot, Clock, DollarSign, FileText, AlertTriangle, CheckCircle, ListChecks, Target, Loader2 } from 'lucide-react'
 
-// Define the structure for the AI recommendations if it's not already globally available
+// Define the structure for the AI recommendations
 interface AnalysisRecommendation {
   recommended_equipment: {
     id: string;
@@ -36,18 +36,30 @@ interface AnalysisRecommendation {
 export function ResultsStep() {
   const { state } = useAnalysis()
   const { formData, results } = state
+
+  // --- FIX: Add a guard clause to handle the initial undefined state ---
+  // If the results or aiRecommendations haven't been loaded into the context yet,
+  // show a loading or informational message instead of trying to render and crashing.
+  if (!results || !results.aiRecommendations) {
+    return (
+      <div className="text-center py-12">
+        <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-primary" />
+        <h3 className="text-lg font-medium mb-2">Generating Results</h3>
+        <p className="text-muted-foreground">
+          Please wait a moment, or complete the previous steps to generate the analysis.
+        </p>
+      </div>
+    )
+  }
+  
+  // We can now safely destructure the properties
   const { aiRecommendations, totalEstimatedCost, totalEstimatedDuration } = results
 
-  // --- FIX: Define the missing helper function ---
   const getUrgencyMultiplier = (level: string) => {
     switch (level) {
-      case 'Expedited':
-        return 1.5
-      case 'Emergency':
-        return 2.0
-      case 'Standard':
-      default:
-        return 1.0
+      case 'Expedited': return 1.5
+      case 'Emergency': return 2.0
+      case 'Standard': default: return 1.0
     }
   }
 
@@ -58,18 +70,6 @@ export function ResultsStep() {
       case 'Low': return 'bg-green-100 text-green-800 border-green-200'
       default: return 'bg-gray-100 text-gray-800 border-gray-200'
     }
-  }
-
-  if (!aiRecommendations) {
-    return (
-      <div className="text-center py-12">
-        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
-        <h3 className="text-lg font-medium mb-2">No Analysis Data</h3>
-        <p className="text-muted-foreground">
-          Please complete the previous steps to generate the analysis results.
-        </p>
-      </div>
-    )
   }
 
   const recommendations = aiRecommendations as AnalysisRecommendation;
